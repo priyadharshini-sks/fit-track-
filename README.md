@@ -1,280 +1,110 @@
-# BSON parser
+# web-streams-polyfill
 
-BSON is short for "Binary JSON," and is the binary-encoded serialization of JSON-like documents.
-You can learn more about it in [the specification](http://bsonspec.org).
+Web Streams, based on the WHATWG spec reference implementation.  
 
-### Table of Contents
+[![build status](https://api.travis-ci.com/MattiasBuelens/web-streams-polyfill.svg?branch=master)](https://travis-ci.com/MattiasBuelens/web-streams-polyfill)
+[![npm version](https://img.shields.io/npm/v/web-streams-polyfill.svg)](https://www.npmjs.com/package/web-streams-polyfill)
+[![license](https://img.shields.io/npm/l/web-streams-polyfill.svg)](https://github.com/MattiasBuelens/web-streams-polyfill/blob/master/LICENSE)
 
-- [Usage](#usage)
-- [Bugs/Feature Requests](#bugs--feature-requests)
-- [Installation](#installation)
-- [Documentation](#documentation)
-- [FAQ](#faq)
+## Links
 
-
-### Release Integrity
-
-Releases are created automatically and signed using the [Node team's GPG key](https://pgp.mongodb.com/node-driver.asc). This applies to the git tag as well as all release packages provided as part of a GitHub release. To verify the provided packages, download the key and import it using gpg:
-
-```shell
-gpg --import node-driver.asc
-```
-
-The GitHub release contains a detached signature file for the NPM package (named
-`bson-X.Y.Z.tgz.sig`).
-
-The following command returns the link npm package. 
-```shell
-npm view bson@vX.Y.Z dist.tarball 
-```
-
-Using the result of the above command, a `curl` command can return the official npm package for the release.
-
-To verify the integrity of the downloaded package, run the following command:
-```shell
-gpg --verify bson-X.Y.Z.tgz.sig bson-X.Y.Z.tgz
-```
-
->[!Note]
-No verification is done when using npm to install the package. The contents of the Github tarball and npm's tarball are identical.
-
-## Bugs / Feature Requests
-
-Think you've found a bug? Want to see a new feature in `bson`? Please open a case in our issue management tool, JIRA:
-
-1. Create an account and login: [jira.mongodb.org](https://jira.mongodb.org)
-2. Navigate to the NODE project: [jira.mongodb.org/browse/NODE](https://jira.mongodb.org/browse/NODE)
-3. Click **Create Issue** - Please provide as much information as possible about the issue and how to reproduce it.
-
-Bug reports in JIRA for the NODE driver project are **public**.
+ - [Official spec][spec]
+ - [Reference implementation][ref-impl]
 
 ## Usage
 
-To build a new version perform the following operations:
+This library comes in multiple variants:
+* `web-streams-polyfill`: a polyfill that replaces the native stream implementations.
+  Recommended for use in web apps supporting older browsers through a `<script>` tag.
+* `web-streams-polyfill/es6`: a polyfill targeting ES2015+ environments.
+  Recommended for use in web apps supporting modern browsers through a `<script>` tag.
+* `web-streams-polyfill/es2018`: a polyfill targeting ES2018+ environments.
+* `web-streams-polyfill/ponyfill`: a [ponyfill] that provides
+  the stream implementations without replacing any globals.
+  Recommended for use in legacy Node applications, or in web libraries supporting older browsers.
+* `web-streams-polyfill/ponyfill/es6`: a ponyfill targeting ES2015+ environments.
+  Recommended for use in Node 6+ applications, or in web libraries supporting modern browsers.
+* `web-streams-polyfill/ponyfill/es2018`: a ponyfill targeting ES2018+ environments.
+  Recommended for use in Node 10+ applications.
 
-```
-npm install
-npm run build
-```
+Each variant also includes TypeScript type definitions, compatible with the DOM type definitions for streams included in TypeScript.
 
-### Node.js or Bundling Usage
-
-When using a bundler or Node.js you can import bson using the package name:
-
-```js
-import { BSON, EJSON, ObjectId } from 'bson';
-// or:
-// const { BSON, EJSON, ObjectId } = require('bson');
-
-const bytes = BSON.serialize({ _id: new ObjectId() });
-console.log(bytes);
-const doc = BSON.deserialize(bytes);
-console.log(EJSON.stringify(doc));
-// {"_id":{"$oid":"..."}}
-```
-
-### Browser Usage
-
-If you are working directly in the browser without a bundler please use the `.mjs` bundle like so:
-
+Usage as a polyfill:
 ```html
-<script type="module">
-  import { BSON, EJSON, ObjectId } from './lib/bson.mjs';
-
-  const bytes = BSON.serialize({ _id: new ObjectId() });
-  console.log(bytes);
-  const doc = BSON.deserialize(bytes);
-  console.log(EJSON.stringify(doc));
-  // {"_id":{"$oid":"..."}}
+<!-- option 1: hosted by unpkg CDN -->
+<script src="https://unpkg.com/web-streams-polyfill/dist/polyfill.min.js"></script>
+<!-- option 2: self hosted -->
+<script src="/path/to/web-streams-polyfill/dist/polyfill.min.js"></script>
+<script>
+var readable = new ReadableStream();
 </script>
 ```
-
-## Installation
-
-```sh
-npm install bson
-```
-
-### MongoDB Node.js Driver Version Compatibility
-
-Only the following version combinations with the [MongoDB Node.js Driver](https://github.com/mongodb/node-mongodb-native) are considered stable.
-
-|               | `bson@1.x` | `bson@4.x` | `bson@5.x` | `bson@6.x` |
-| ------------- | ---------- | ---------- | ---------- | ---------- |
-| `mongodb@6.x` | N/A        | N/A        | N/A        | ✓          |
-| `mongodb@5.x` | N/A        | N/A        | ✓          | N/A        |
-| `mongodb@4.x` | N/A        | ✓          | N/A        | N/A        |
-| `mongodb@3.x` | ✓          | N/A        | N/A        | N/A        |
-
-## Documentation
-
-### BSON
-
-[API documentation](https://mongodb.github.io/node-mongodb-native/Next/modules/BSON.html)
-
-<a name="EJSON"></a>
-
-### EJSON
-
-- [EJSON](#EJSON)
-
-  - [.parse(text, [options])](#EJSON.parse)
-
-  - [.stringify(value, [replacer], [space], [options])](#EJSON.stringify)
-
-  - [.serialize(bson, [options])](#EJSON.serialize)
-
-  - [.deserialize(ejson, [options])](#EJSON.deserialize)
-
-<a name="EJSON.parse"></a>
-
-#### _EJSON_.parse(text, [options])
-
-| Param             | Type                 | Default           | Description                                                                        |
-| ----------------- | -------------------- | ----------------- | ---------------------------------------------------------------------------------- |
-| text              | <code>string</code>  |                   |                                                                                    |
-| [options]         | <code>object</code>  |                   | Optional settings                                                                  |
-| [options.relaxed] | <code>boolean</code> | <code>true</code> | Attempt to return native JS types where possible, rather than BSON types (if true) |
-
-Parse an Extended JSON string, constructing the JavaScript value or object described by that
-string.
-
-**Example**
-
+Usage as a Node module:
 ```js
-const { EJSON } = require('bson');
-const text = '{ "int32": { "$numberInt": "10" } }';
-
-// prints { int32: { [String: '10'] _bsontype: 'Int32', value: '10' } }
-console.log(EJSON.parse(text, { relaxed: false }));
-
-// prints { int32: 10 }
-console.log(EJSON.parse(text));
+var streams = require("web-streams-polyfill/ponyfill");
+var readable = new streams.ReadableStream();
 ```
-
-<a name="EJSON.stringify"></a>
-
-#### _EJSON_.stringify(value, [replacer], [space], [options])
-
-| Param             | Type                                        | Default           | Description                                                                                                                                                                                                                                                                                                                                        |
-| ----------------- | ------------------------------------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| value             | <code>object</code>                         |                   | The value to convert to extended JSON                                                                                                                                                                                                                                                                                                              |
-| [replacer]        | <code>function</code> \| <code>array</code> |                   | A function that alters the behavior of the stringification process, or an array of String and Number objects that serve as a whitelist for selecting/filtering the properties of the value object to be included in the JSON string. If this value is null or not provided, all properties of the object are included in the resulting JSON string |
-| [space]           | <code>string</code> \| <code>number</code>  |                   | A String or Number object that's used to insert white space into the output JSON string for readability purposes.                                                                                                                                                                                                                                  |
-| [options]         | <code>object</code>                         |                   | Optional settings                                                                                                                                                                                                                                                                                                                                  |
-| [options.relaxed] | <code>boolean</code>                        | <code>true</code> | Enabled Extended JSON's `relaxed` mode                                                                                                                                                                                                                                                                                                             |
-| [options.legacy]  | <code>boolean</code>                        | <code>true</code> | Output in Extended JSON v1                                                                                                                                                                                                                                                                                                                         |
-
-Converts a BSON document to an Extended JSON string, optionally replacing values if a replacer
-function is specified or optionally including only the specified properties if a replacer array
-is specified.
-
-**Example**
-
+Usage as a ES2015 module:
 ```js
-const { EJSON } = require('bson');
-const Int32 = require('mongodb').Int32;
-const doc = { int32: new Int32(10) };
-
-// prints '{"int32":{"$numberInt":"10"}}'
-console.log(EJSON.stringify(doc, { relaxed: false }));
-
-// prints '{"int32":10}'
-console.log(EJSON.stringify(doc));
+import { ReadableStream } from "web-streams-polyfill/ponyfill";
+const readable = new ReadableStream();
 ```
 
-<a name="EJSON.serialize"></a>
+## Compatibility
 
-#### _EJSON_.serialize(bson, [options])
+The `polyfill` and `ponyfill` variants work in any ES5-compatible environment that has a global `Promise`.
+If you need to support older browsers or Node versions that do not have a native `Promise` implementation
+(check the [support table][promise-support]), you must first include a `Promise` polyfill
+(e.g. [promise-polyfill][promise-polyfill]).
 
-| Param     | Type                | Description                                          |
-| --------- | ------------------- | ---------------------------------------------------- |
-| bson      | <code>object</code> | The object to serialize                              |
-| [options] | <code>object</code> | Optional settings passed to the `stringify` function |
+The `polyfill/es6` and `ponyfill/es6` variants work in any ES2015-compatible environment.
 
-Serializes an object to an Extended JSON string, and reparse it as a JavaScript object.
+The `polyfill/es2018` and `ponyfill/es2018` variants work in any ES2018-compatible environment.
 
-<a name="EJSON.deserialize"></a>
+[Async iterable support for `ReadableStream`][rs-asynciterator] is available in all variants, but requires an ES2018-compatible environment or a polyfill for `Symbol.asyncIterator`.
 
-#### _EJSON_.deserialize(ejson, [options])
+[`WritableStreamDefaultController.signal`][ws-controller-signal] is available in all variants, but requires a global `AbortController` constructor. If necessary, consider using a polyfill such as [abortcontroller-polyfill].
 
-| Param     | Type                | Description                                  |
-| --------- | ------------------- | -------------------------------------------- |
-| ejson     | <code>object</code> | The Extended JSON object to deserialize      |
-| [options] | <code>object</code> | Optional settings passed to the parse method |
+[Reading with a BYOB reader][mdn-byob-read] is available in all variants, but requires `ArrayBuffer.prototype.transfer()` or `structuredClone()` to exist in order to correctly transfer the given view's buffer. If not available, then the buffer won't be transferred during the read.
 
-Deserializes an Extended JSON object into a plain JavaScript object with native/BSON types
+## Compliance
 
-## Error Handling
+The polyfill implements [version `4dc123a` (13 Nov 2023)][spec-snapshot] of the streams specification.
 
-It is our recommendation to use `BSONError.isBSONError()` checks on errors and to avoid relying on parsing `error.message` and `error.name` strings in your code. We guarantee `BSONError.isBSONError()` checks will pass according to semver guidelines, but errors may be sub-classed or their messages may change at any time, even patch releases, as we see fit to increase the helpfulness of the errors.
+The polyfill is tested against the same [web platform tests][wpt] that are used by browsers to test their native implementations.
+The polyfill aims to pass all tests, although it allows some exceptions for practical reasons:
+* The `es2018` variant passes all of the tests.
+* The `es6` variant passes the same tests as the `es2018` variant, except for the [test for the prototype of `ReadableStream`'s async iterator][wpt-async-iterator-prototype].
+  Retrieving the correct `%AsyncIteratorPrototype%` requires using an async generator (`async function* () {}`), which is invalid syntax before ES2018.
+  Instead, the polyfill [creates its own version][stub-async-iterator-prototype] which is functionally equivalent to the real prototype.
+* The `es5` variant passes the same tests as the `es6` variant, except for various tests about specific characteristics of the constructors, properties and methods.
+  These test failures do not affect the run-time behavior of the polyfill.
+  For example:
+  * The `name` property of down-leveled constructors is incorrect.
+  * The `length` property of down-leveled constructors and methods with optional arguments is incorrect.
+  * Not all properties and methods are correctly marked as non-enumerable.
+  * Down-leveled class methods are not correctly marked as non-constructable.
 
-Any new errors we add to the driver will directly extend an existing error class and no existing error will be moved to a different parent class outside of a major release.
-This means `BSONError.isBSONError()` will always be able to accurately capture the errors that our BSON library throws.
+The type definitions are compatible with the built-in stream types of TypeScript 3.3.
 
-Hypothetical example: A collection in our Db has an issue with UTF-8 data:
+## Contributors
 
-```ts
-let documentCount = 0;
-const cursor = collection.find({}, { utf8Validation: true });
-try {
-  for await (const doc of cursor) documentCount += 1;
-} catch (error) {
-  if (BSONError.isBSONError(error)) {
-    console.log(`Found the troublemaker UTF-8!: ${documentCount} ${error.message}`);
-    return documentCount;
-  }
-  throw error;
-}
-```
+Thanks to these people for their work on [the original polyfill][creatorrr-polyfill]:
 
-## React Native
+ - Diwank Singh Tomer ([creatorrr](https://github.com/creatorrr))
+ - Anders Riutta ([ariutta](https://github.com/ariutta))
 
-BSON vendors the required polyfills for `TextEncoder`, `TextDecoder`, `atob`, `btoa` imported from React Native and therefore doesn't expect users to polyfill these. One additional polyfill, `crypto.getRandomValues` is recommended and can be installed with the following command:
-
-```sh
-npm install --save react-native-get-random-values
-```
-
-The following snippet should be placed at the top of the entrypoint (by default this is the root `index.js` file) for React Native projects using the BSON library. These lines must be placed for any code that imports `BSON`.
-
-```typescript
-// Required Polyfills For ReactNative
-import 'react-native-get-random-values';
-```
-
-Finally, import the `BSON` library like so:
-
-```typescript
-import { BSON, EJSON } from 'bson';
-```
-
-This will cause React Native to import the `node_modules/bson/lib/bson.rn.cjs` bundle (see the `"react-native"` setting we have in the `"exports"` section of our [package.json](./package.json).)
-
-### Technical Note about React Native module import
-
-The `"exports"` definition in our `package.json` will result in BSON's CommonJS bundle being imported in a React Native project instead of the ES module bundle. Importing the CommonJS bundle is necessary because BSON's ES module bundle of BSON uses top-level await, which is not supported syntax in [React Native's runtime hermes](https://hermesengine.dev/).
-
-## FAQ
-
-#### Why does `undefined` get converted to `null`?
-
-The `undefined` BSON type has been [deprecated for many years](http://bsonspec.org/spec.html), so this library has dropped support for it. Use the `ignoreUndefined` option (for example, from the [driver](http://mongodb.github.io/node-mongodb-native/2.2/api/MongoClient.html#connect) ) to instead remove `undefined` keys.
-
-#### How do I add custom serialization logic?
-
-This library looks for `toBSON()` functions on every path, and calls the `toBSON()` function to get the value to serialize.
-
-```javascript
-const BSON = require('bson');
-
-class CustomSerialize {
-  toBSON() {
-    return 42;
-  }
-}
-
-const obj = { answer: new CustomSerialize() };
-// "{ answer: 42 }"
-console.log(BSON.deserialize(BSON.serialize(obj)));
-```
+[spec]: https://streams.spec.whatwg.org
+[ref-impl]: https://github.com/whatwg/streams
+[ponyfill]: https://github.com/sindresorhus/ponyfill
+[promise-support]: https://kangax.github.io/compat-table/es6/#test-Promise
+[promise-polyfill]: https://www.npmjs.com/package/promise-polyfill
+[rs-asynciterator]: https://streams.spec.whatwg.org/#rs-asynciterator
+[ws-controller-signal]: https://streams.spec.whatwg.org/#ws-default-controller-signal
+[abortcontroller-polyfill]: https://www.npmjs.com/package/abortcontroller-polyfill
+[mdn-byob-read]: https://developer.mozilla.org/en-US/docs/Web/API/ReadableStreamBYOBReader/read
+[spec-snapshot]: https://streams.spec.whatwg.org/commit-snapshots/4dc123a6e7f7ba89a8c6a7975b021156f39cab52/
+[wpt]: https://github.com/web-platform-tests/wpt/tree/2a298b616b7c865917d7198a287310881cbfdd8d/streams
+[wpt-async-iterator-prototype]: https://github.com/web-platform-tests/wpt/blob/2a298b616b7c865917d7198a287310881cbfdd8d/streams/readable-streams/async-iterator.any.js#L24
+[stub-async-iterator-prototype]: https://github.com/MattiasBuelens/web-streams-polyfill/blob/v2.0.0/src/target/es5/stub/async-iterator-prototype.ts
+[creatorrr-polyfill]: https://github.com/creatorrr/web-streams-polyfill
